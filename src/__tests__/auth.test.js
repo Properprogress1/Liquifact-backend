@@ -60,7 +60,11 @@ describe('Authentication Middleware', () => {
             const response = await request(app)
                 .post('/api/invoices')
                 .set('Authorization', `Bearer ${validToken}`)
-                .send({});
+                .send({
+                    amount: 100,
+                    customer: 'Auth Test',
+                    dueDate: '2099-01-01T00:00:00Z',
+                });
             expect(response.status).toBe(201);
             expect(response.body.data.status).toBe('pending_verification');
         });

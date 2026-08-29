@@ -6,6 +6,17 @@
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 /**
+ * Generates a per-user or per-IP rate limit key.
+ *
+ * @param {import('express').Request} req - The Express request object.
+ * @returns {string} The rate limit key.
+ */
+function globalKeyGenerator(req) {
+  // Use user ID if authenticated, otherwise fallback to safe IP generator
+  return req.user ? `user_${req.user.id}` : ipKeyGenerator(req);
+}
+
+/**
  * Standard global rate limiter for all API endpoints.
  * Limits each IP to 100 requests per 15 minutes.
  */
@@ -17,11 +28,18 @@ const globalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    // Use user ID if authenticated, otherwise fallback to safe IP generator
-    return req.user ? `user_${req.user.id}` : ipKeyGenerator(req);
-  },
+  keyGenerator: globalKeyGenerator,
 });
+
+/**
+ * Generates a per-user or per-IP key for sensitive operations.
+ *
+ * @param {import('express').Request} req - The Express request object.
+ * @returns {string} The rate limit key.
+ */
+function sensitiveKeyGenerator(req) {
+  return req.user ? `user_${req.user.id}` : ipKeyGenerator(req);
+}
 
 /**
  * Stricter limiter for sensitive operations (Invoices, Escrow).
@@ -35,9 +53,7 @@ const sensitiveLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.user ? `user_${req.user.id}` : ipKeyGenerator(req);
-  },
+  keyGenerator: sensitiveKeyGenerator,
 });
 
 module.exports = {

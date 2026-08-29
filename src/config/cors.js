@@ -93,6 +93,13 @@ function createCorsOptions(env = process.env) {
   const allowedOriginsSet = new Set(allowedOrigins);
 
   return {
+    /**
+     * CORS origin callback that enforces the exact-match allowlist.
+     *
+     * @param {string | undefined} origin - Request Origin header.
+     * @param {Function} callback - CORS callback to allow or deny.
+     * @returns {void}
+     */
     origin(origin, callback) {
       if (!origin || allowedOriginsSet.has(origin)) {
         return callback(null, true);
